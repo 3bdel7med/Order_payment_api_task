@@ -13,6 +13,14 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'credit_card' => [
+    'api_key' => env('CREDIT_CARD_API_KEY', 'default_cc_key'),
+    'secret'  => env('CREDIT_CARD_SECRET', 'default_cc_secret'),
+    ],
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID', 'default_paypal_id'),
+        'secret'    => env('PAYPAL_SECRET', 'default_paypal_secret'),
+    ],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
