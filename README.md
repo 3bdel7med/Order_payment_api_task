@@ -3,7 +3,7 @@
 A professional, production-ready RESTful API built with Laravel 11, following **Clean Architecture**, **SOLID Principles**, and design patterns like **Strategy Pattern**, **Factory Pattern**, and **JWT Authentication**.
 
 ## 🛠️ Tech Stack
-- **Framework:** Laravel 11 (PHP 8.2+)
+- **Framework:** Laravel 12 (PHP 8.2+)
 - **Authentication:** JWT (JSON Web Tokens) via `php-open-source-saver/jwt-auth`
 - **Architecture:** Clean Architecture / Service Layer / Domain-Driven structure
 - **Design Patterns:** Strategy Pattern, Factory Pattern, Dependency Injection
