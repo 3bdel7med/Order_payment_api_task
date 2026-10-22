@@ -19,13 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->middleware('api')
                 ->group(base_path('routes/api.php'));
         }
-
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // 1. 404 Not Found Error Handling
+        // 1. 404 Not Found Custom JSON Response
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -34,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // 2. 401 Unauthorized Error Handling
+        // 2. 401 Unauthorized Custom JSON Response
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -43,13 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // 3. 500 Server Error Handling
-        $exceptions->render(function (Throwable $e, Request $request) {
-            if ($request->is('api/*') && !config('app.debug')) {
-                return response()->json([
-                    'message' => 'A server error occurred. Please try again later.',
-                    'error'   => $e->getMessage(),
-                ], 500);
-            }
-        });
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson()
+        );
     })->create();

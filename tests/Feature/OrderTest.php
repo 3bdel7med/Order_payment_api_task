@@ -111,7 +111,7 @@ class OrderTest extends TestCase
 
         $response = $this->actingAs($user, 'api')->deleteJson("/api/orders/{$order->id}");
 
-        $response->assertStatus(400);
+        $response->assertStatus(422);
 
         $this->assertDatabaseHas('orders', ['id' => $order->id]);
     }

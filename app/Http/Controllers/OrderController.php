@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Exception;
 
 class OrderController extends Controller
@@ -49,6 +50,7 @@ class OrderController extends Controller
 
     public function show(Order $order): JsonResponse
     {
+        Gate::authorize('view', $order);
         return response()->json([
             'data' => new OrderResource($order->load(['items', 'payment'])),
         ]);
@@ -57,7 +59,7 @@ class OrderController extends Controller
     public function update(UpdateOrderRequest $request, Order $order): JsonResponse
     {
         $updatedOrder = $this->orderService->updateOrder($order, $request->validated());
-
+        Gate::authorize('update', $order);
         return response()->json([
             'message' => 'Order updated successfully',
             'data'    => new OrderResource($updatedOrder),
@@ -67,6 +69,7 @@ class OrderController extends Controller
     public function destroy(Order $order): JsonResponse
     {
         try {
+            Gate::authorize('delete', $order);
             $this->orderService->deleteOrder($order);
 
             return response()->json([
