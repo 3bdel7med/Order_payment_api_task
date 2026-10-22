@@ -1,73 +1,91 @@
 # 🚀 Extendable Order & Payment Management API
 
-A professional, production-ready RESTful API built with Laravel 11, following **Clean Architecture**, **SOLID Principles**, and design patterns like **Strategy Pattern**, **Factory Pattern**, and **JWT Authentication**.
+A RESTful API for managing orders and payments, built with **Laravel 12** and **PHP 8.2+**. It follows a service-layer architecture and SOLID principles, and uses the **Strategy** and **Factory** patterns so new payment gateways can be added with minimal changes.
+
+---
 
 ## 🛠️ Tech Stack
-- **Framework:** Laravel 12 (PHP 8.2+)
-- **Authentication:** JWT (JSON Web Tokens) via `php-open-source-saver/jwt-auth`
-- **Architecture:** Clean Architecture / Service Layer / Domain-Driven structure
-- **Design Patterns:** Strategy Pattern, Factory Pattern, Dependency Injection
-- **Database:** MySQL / PostgreSQL with explicit FK constraints & indexes
-- **Security:** Throttle Middleware, Global Exception Handler (JSON standardized responses)
-- **Testing:** PHPUnit / Pest PHP Feature & Unit Tests
-- *** 🔒 Security & Authorization (IDOR Protection)***
-- **Order Ownership Protection:** The API implements strict policies (`OrderPolicy`) to ensure that users can **only** view, update, or delete their own orders. Attempting to access or modify another user's order ID will instantly trigger a `403 Forbidden` response, mitigating **Insecure Direct Object Reference (IDOR)** vulnerabilities.
+
+- **Framework:** Laravel 12
+- **Language:** PHP 8.2+
+- **Authentication:** JWT via `tymon/jwt-auth`
+- **Architecture:** Service Layer with Contracts (interfaces)
+- **Design Patterns:** Strategy, Factory, Dependency Injection
+- **Database:** MySQL / PostgreSQL, with foreign key constraints and indexes
+- **Security:** Throttle middleware, global exception handler (standardized JSON errors), policy-based authorization
+- **Testing:** Pest / PHPUnit (Feature & Unit tests)
+- **CI:** GitHub Actions
 
 ---
+
+## 🔒 Security & Authorization (IDOR Protection)
+
+The API uses `OrderPolicy` to make sure users can **only** view, update, or delete their own orders. Accessing or modifying another user's order returns `403 Forbidden`, which protects against **Insecure Direct Object Reference (IDOR)** attacks.
+
 ---
 
-## 🚀 Continuous Integration (CI/CD Pipeline)
+## 🚀 Continuous Integration
 
-This project features a fully automated **GitHub Actions CI/CD pipeline** configured in `.github/workflows/run-tests.yml`. 
-Every time code is pushed or a pull request is opened against the `main` branch, GitHub Actions automatically:
-1. Provisions a clean **Ubuntu** environment with **PHP 8.2** and required extensions.
-2. Spins up an isolated **MySQL 8.0** service container.
-3. Installs composer dependencies and generates application keys.
-4. Runs database migrations and executes the complete **Pest / PHPUnit** test suite to guarantee 100% code health and prevent regressions.
+The project includes a GitHub Actions workflow in `.github/workflows/run-tests.yml`. On every push or pull request to `main`, it:
 
-*You can check the passing workflow status badge directly in the repository actions tab!*
+1. Provisions an Ubuntu environment with **PHP 8.2** and the required extensions.
+2. Starts an isolated **MySQL 8.0** service container.
+3. Installs Composer dependencies and generates the application key.
+4. Runs migrations and executes the full test suite.
+
+You can check the workflow status in the repository's **Actions** tab.
+
+---
+
 ## 📂 Project Architecture
-The project is structured to maintain strict separation of concerns and open-closed extensibility:
 
 ```
 app/
 ├── Core/
 │   ├── Auth/
 │   │   ├── Contracts/         # Interfaces (e.g., AuthServiceInterface)
-│   │   ├── Services/          # Business Logic (e.g., JwtAuthService)
-│   │   └── Factories/         # Dynamic Service Resolver (AuthServiceFactory)
+│   │   ├── Services/          # Business logic (e.g., JwtAuthService)
+│   │   └── Factories/         # Service resolver (AuthServiceFactory)
 │   └── Payment/
-│       ├── Contracts/         # PaymentGatewayInterface Contract
-│       ├── Strategies/        # CreditCardPayment, PayPalPayment Strategies
-│       └── Factories/         # Dynamic Gateway Resolver (PaymentGatewayFactory)
+│       ├── Contracts/         # PaymentGatewayInterface
+│       ├── Strategies/        # CreditCardPayment, PayPalPayment
+│       └── Factories/         # Gateway resolver (PaymentGatewayFactory)
 ├── Enums/
-│   ├── OrderStatusEnum.php    # Order Statuses (pending, confirmed, cancelled)
-│   ├── PaymentStatusEnum.php  # Payment Statuses (pending, successful, failed)
-│   └── PaymentMethodEnum.php  # Payment Gateway Identifiers (credit_card, paypal)
+│   ├── OrderStatusEnum.php    # pending, confirmed, cancelled
+│   ├── PaymentStatusEnum.php  # pending, successful, failed
+│   └── PaymentMethodEnum.php  # credit_card, paypal
 ├── Http/
 │   ├── Controllers/
-│   │   ├── Auth/              # Auth Endpoints (Register, Login, Me, Logout)
-│   │   ├── OrderController.php# RESTful Order CRUD
-│   │   └── PaymentController.php # Payment Processing Endpoints
-│   ├── Requests/              # Form Validation Requests (Order & Payment)
-│   └── Resources/             # API Resource Transformers (Order, Payment, OrderItem)
+│   │   ├── Auth/              # Register, Login, Me, Logout
+│   │   ├── OrderController.php
+│   │   └── PaymentController.php
+│   ├── Requests/              # Form Requests (validation)
+│   └── Resources/             # API Resources (Order, Payment, OrderItem)
 ├── Models/
-│   ├── Order.php              # Scopes, Casts & Business Helpers
-│   ├── OrderItem.php          # Order Line Items
-│   └── Payment.php            # Payment Transaction Ledger
+│   ├── Order.php
+│   ├── OrderItem.php
+│   └── Payment.php
 └── Services/
-    ├── OrderService.php       # DB Transactions & Order Business Logic
-    └── PaymentService.php     # Payment Execution & Validation Rules
+    ├── OrderService.php       # Order business logic & DB transactions
+    └── PaymentService.php     # Payment execution & validation rules
 ```
 
 ---
 
 ## ⚙️ Installation & Setup
 
+### Requirements
+
+- PHP 8.2 or higher
+- Composer
+- MySQL 8.0 (or PostgreSQL)
+
+### Steps
+
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd <project-folder>
+   git clone https://github.com/3bdel7med/Order_payment_api_task.git
+   cd Order_payment_api_task
    ```
 
 2. **Install dependencies:**
@@ -75,90 +93,104 @@ app/
    composer install
    ```
 
-3. **Environment Setup:**
+3. **Set up the environment:**
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
 
-4. **Configure Payment Gateway Credentials in `.env`:**
-   Add your gateway configurations and credentials to your `.env` file:
+4. **Configure the database** in `.env` (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+
+5. **Configure payment gateway credentials** in `.env`:
    ```env
-   # Credit Card Configuration
+   # Credit Card
    CREDIT_CARD_API_KEY=your_cc_api_key_here
    CREDIT_CARD_SECRET=your_cc_secret_here
 
-   # PayPal Configuration
+   # PayPal
    PAYPAL_CLIENT_ID=your_paypal_client_id_here
    PAYPAL_SECRET=your_paypal_secret_here
    ```
 
-5. **Configure Database & Run Migrations:**
-   Update your database credentials in `.env`, then execute migrations:
-   ```bash
-   php artisan migrate
-   ```
-
-6. **Generate JWT Secret:**
+6. **Generate the JWT secret:**
    ```bash
    php artisan jwt:secret
    ```
 
-7. **Run the Application:**
+7. **Run migrations:**
+   ```bash
+   php artisan migrate
+   ```
+
+8. **Start the server:**
    ```bash
    php artisan serve
    ```
+
+The API is now available at `http://127.0.0.1:8000/api`.
 
 ---
 
 ## 🔌 API Endpoints
 
-### 🔑 Authentication Module
-| Method | Endpoint | Description | Auth Required |
-| --- | --- | --- | --- |
-| `POST` | `/api/register` | Register a new user | No |
-| `POST` | `/api/login` | Authenticate user & receive JWT token | No |
-| `GET` | `/api/me` | Retrieve authenticated user profile | Yes (Bearer Token) |
-| `POST` | `/api/logout` | Invalidate token / Logout | Yes (Bearer Token) |
+All protected endpoints require the header:
 
-### 📦 Order Management Module
-| Method | Endpoint | Description | Auth Required |
-| --- | --- | --- | --- |
-| `GET` | `/api/orders` | List orders (supports `?status=pending|confirmed|cancelled` & pagination) | Yes (Bearer Token) |
-| `POST` | `/api/orders` | Create order with line items & auto-calculated total | Yes (Bearer Token) |
-| `GET` | `/api/orders/{id}` | View specific order details with items & payment status | Yes (Bearer Token) |
-| `PUT` | `/api/orders/{id}` | Update order details / status | Yes (Bearer Token) |
-| `DELETE` | `/api/orders/{id}` | Delete order (Blocked if order has associated payments) | Yes (Bearer Token) |
+```
+Authorization: Bearer <your_jwt_token>
+```
 
-### 💳 Payment Management Module
-| Method | Endpoint | Description | Auth Required |
-| --- | --- | --- | --- |
-| `GET` | `/api/payments` | List payments (supports filtering by `?order_id=X` & pagination) | Yes (Bearer Token) |
-| `POST` | `/api/payments/process` | Process payment for a confirmed order via selected gateway | Yes (Bearer Token) |
+### 🔑 Authentication
+
+| Method | Endpoint        | Description                           | Auth Required |
+|--------|-----------------|---------------------------------------|---------------|
+| `POST` | `/api/register` | Register a new user                   | No            |
+| `POST` | `/api/login`    | Authenticate and receive a JWT token  | No            |
+| `GET`  | `/api/me`       | Get the authenticated user's profile  | Yes           |
+| `POST` | `/api/logout`   | Invalidate the current token          | Yes           |
+
+### 📦 Orders
+
+| Method   | Endpoint           | Description                                                          | Auth Required |
+|----------|--------------------|----------------------------------------------------------------------|---------------|
+| `GET`    | `/api/orders`      | List orders (filter with `?status=`, paginated)                      | Yes           |
+| `POST`   | `/api/orders`      | Create an order with line items and an auto-calculated total         | Yes           |
+| `GET`    | `/api/orders/{id}` | View an order with its items and payment status                      | Yes           |
+| `PUT`    | `/api/orders/{id}` | Update order details / status                                        | Yes           |
+| `DELETE` | `/api/orders/{id}` | Delete an order (blocked if it has associated payments)              | Yes           |
+
+Allowed values for the `status` filter: `pending`, `confirmed`, `cancelled`.
+
+### 💳 Payments
+
+| Method | Endpoint                | Description                                                  | Auth Required |
+|--------|-------------------------|--------------------------------------------------------------|---------------|
+| `GET`  | `/api/payments`         | List payments (filter with `?order_id=`, paginated)          | Yes           |
+| `POST` | `/api/payments/process` | Process a payment for a confirmed order via the chosen gateway | Yes         |
 
 ---
 
-## 🛡️ Business Rules & Validation Constraints
-- **Payment Eligibility:** Payments can **ONLY** be processed for orders in `confirmed` status. Unconfirmed (`pending` or `cancelled`) orders reject payments with a `422 Unprocessable Entity` or `400 Bad Request`.
-- **Order Deletion Guard:** An order **CANNOT** be deleted if it has associated payment records, maintaining strict database integrity and financial auditing.
-- **Idempotency Check:** Successful payments block duplicate re-processing attempts for the same order.
+## 🛡️ Business Rules & Validation
+
+- **Payment eligibility:** Payments can **only** be processed for orders in `confirmed` status. Orders in `pending` or `cancelled` status are rejected with `422 Unprocessable Entity`.
+- **Order deletion guard:** An order **cannot** be deleted if it has associated payments.
+- **Idempotency check:** An order with a successful payment cannot be paid again.
+- **Ownership:** Users can only access their own orders (see IDOR protection above).
+- **Validation:** All inputs are validated through Form Requests, and errors are returned as standardized JSON.
 
 ---
 
 ## 🧩 Payment Gateway Extensibility Guide
 
-The payment subsystem is built using the **Strategy Pattern** paired with a **Factory Pattern**, allowing new payment gateways (e.g., Apple Pay, Fawry, Stripe) to be added seamlessly without modifying existing business logic (**Open/Closed Principle**).
+The payment system uses the **Strategy Pattern** with a **Factory**. Each gateway is a separate class implementing `PaymentGatewayInterface`, and the factory picks the right one based on the requested payment method. This lets you add gateways (e.g., Apple Pay, Fawry, Stripe) without touching `PaymentService` or `PaymentController` (**Open/Closed Principle**).
 
-### How to Add a New Payment Gateway (e.g., `ApplePay`)
+### How to Add a New Gateway (example: `ApplePay`)
 
-1. **Add Gateway Identifier to Enum:**
-   Add the new method to `app/Enums/PaymentMethodEnum.php`:
+1. **Add the identifier to the enum** in `app/Enums/PaymentMethodEnum.php`:
    ```php
    case APPLE_PAY = 'apple_pay';
    ```
 
-2. **Add Credentials Configuration:**
-   Add gateway keys in `config/services.php` and `.env.example`:
+2. **Add credentials** to `config/services.php` and `.env.example`:
    ```php
    'apple_pay' => [
        'merchant_id' => env('APPLE_PAY_MERCHANT_ID'),
@@ -166,16 +198,17 @@ The payment subsystem is built using the **Strategy Pattern** paired with a **Fa
    ],
    ```
 
-3. **Create Payment Strategy Class:**
-   Create `app/Core/Payment/Strategies/ApplePayPayment.php` implementing `PaymentGatewayInterface`:
+3. **Create the strategy class** `app/Core/Payment/Strategies/ApplePayPayment.php`:
    ```php
+   <?php
+
    namespace App\Core\Payment\Strategies;
 
    use App\Core\Payment\Contracts\PaymentGatewayInterface;
    use App\Enums\PaymentStatusEnum;
    use App\Models\Order;
-   use Illuminate\Support\Str;
    use Exception;
+   use Illuminate\Support\Str;
 
    class ApplePayPayment implements PaymentGatewayInterface
    {
@@ -184,10 +217,10 @@ The payment subsystem is built using the **Strategy Pattern** paired with a **Fa
            $merchantId = config('services.apple_pay.merchant_id');
 
            if (empty($merchantId)) {
-               throw new Exception("Apple Pay merchant credentials not configured.", 500);
+               throw new Exception('Apple Pay merchant credentials are not configured.', 500);
            }
 
-           // Process or simulate gateway API request
+           // Call the real gateway here, or simulate the response.
            return [
                'payment_id' => 'APPLE-' . strtoupper(Str::random(10)),
                'amount'     => $order->total_amount,
@@ -197,28 +230,43 @@ The payment subsystem is built using the **Strategy Pattern** paired with a **Fa
    }
    ```
 
-4. **Register Strategy in Factory:**
-   Update `app/Core/Payment/Factories/PaymentGatewayFactory.php`:
+4. **Register the strategy in the factory** `app/Core/Payment/Factories/PaymentGatewayFactory.php`:
    ```php
    return match ($paymentMethod) {
        PaymentMethodEnum::CREDIT_CARD => new CreditCardPayment(),
        PaymentMethodEnum::PAYPAL      => new PayPalPayment(),
        PaymentMethodEnum::APPLE_PAY   => new ApplePayPayment(),
-       default => throw new InvalidArgumentException("Unsupported payment method: {$method}"),
+       default => throw new InvalidArgumentException(
+           "Unsupported payment method: {$paymentMethod->value}"
+       ),
    };
    ```
 
-No changes are needed in `PaymentService` or `PaymentController`.
+That's all. No changes are needed in `PaymentService` or `PaymentController`.
+
+---
+
+## 📬 API Documentation (Postman)
+
+The Postman collection is located in the `docs/` folder. Import it into Postman via **Import → File**. It includes requests grouped by module (Authentication, Orders, Payments) with success and error examples.
 
 ---
 
 ## 🧪 Running Tests
 
-To run the automated test suite (Unit & Feature Tests):
-
 ```bash
 php artisan test
 ```
+
+The test suite covers both Feature tests (endpoints, authorization, business rules) and Unit tests (payment gateway logic).
+
+---
+
+## 📝 Notes & Assumptions
+
+- Payment processing is **simulated**; no real gateway API calls are made.
+- Gateway credentials are read from `.env` through `config/services.php`.
+- JWT tokens are sent in the `Authorization: Bearer` header.
 
 ---
 
