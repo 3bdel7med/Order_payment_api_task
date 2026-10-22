@@ -13,7 +13,7 @@ A RESTful API for managing orders and payments, built with **Laravel 12** and **
 - **Design Patterns:** Strategy, Factory, Dependency Injection
 - **Database:** MySQL / PostgreSQL, with foreign key constraints and indexes
 - **Security:** Throttle middleware, global exception handler (standardized JSON errors), policy-based authorization
-- **Testing:** Pest / PHPUnit (Feature & Unit tests)
+- **Testing:** Pest on top of PHPUnit (Feature & Unit tests)
 - **CI:** GitHub Actions
 
 ---
@@ -26,14 +26,9 @@ The API uses `OrderPolicy` to make sure users can **only** view, update, or dele
 
 ## 🚀 Continuous Integration
 
-The project includes a GitHub Actions workflow in `.github/workflows/run-tests.yml`. On every push or pull request to `main`, it:
+The project includes a GitHub Actions workflow in `.github/workflows/run-tests.yml`. On every push or pull request to `main`, it runs the automated test suite on an Ubuntu runner with **PHP 8.2**, so regressions are caught early.
 
-1. Provisions an Ubuntu environment with **PHP 8.2** and the required extensions.
-2. Starts an isolated **MySQL 8.0** service container.
-3. Installs Composer dependencies and generates the application key.
-4. Runs migrations and executes the full test suite.
-
-You can check the workflow status in the repository's **Actions** tab.
+You can check the latest run in the repository's **Actions** tab.
 
 ---
 
@@ -78,7 +73,7 @@ app/
 
 - PHP 8.2 or higher
 - Composer
-- MySQL 8.0 (or PostgreSQL)
+- SQLite (default), or MySQL / PostgreSQL
 
 ### Steps
 
@@ -99,7 +94,7 @@ app/
    php artisan key:generate
    ```
 
-4. **Configure the database** in `.env` (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+4. **Database:** the project defaults to **SQLite** (`DB_CONNECTION=sqlite`), so no extra setup is needed. To use MySQL or PostgreSQL instead, update the `DB_*` values in `.env`.
 
 5. **Configure payment gateway credentials** in `.env`:
    ```env
@@ -155,7 +150,7 @@ Authorization: Bearer <your_jwt_token>
 | `GET`    | `/api/orders`      | List orders (filter with `?status=`, paginated)                      | Yes           |
 | `POST`   | `/api/orders`      | Create an order with line items and an auto-calculated total         | Yes           |
 | `GET`    | `/api/orders/{id}` | View an order with its items and payment status                      | Yes           |
-| `PUT`    | `/api/orders/{id}` | Update order details / status                                        | Yes           |
+| `PUT` / `PATCH` | `/api/orders/{id}` | Update the order status (e.g., confirm or cancel)             | Yes           |
 | `DELETE` | `/api/orders/{id}` | Delete an order (blocked if it has associated payments)              | Yes           |
 
 Allowed values for the `status` filter: `pending`, `confirmed`, `cancelled`.
@@ -232,14 +227,19 @@ The payment system uses the **Strategy Pattern** with a **Factory**. Each gatewa
 
 4. **Register the strategy in the factory** `app/Core/Payment/Factories/PaymentGatewayFactory.php`:
    ```php
-   return match ($paymentMethod) {
-       PaymentMethodEnum::CREDIT_CARD => new CreditCardPayment(),
-       PaymentMethodEnum::PAYPAL      => new PayPalPayment(),
-       PaymentMethodEnum::APPLE_PAY   => new ApplePayPayment(),
-       default => throw new InvalidArgumentException(
-           "Unsupported payment method: {$paymentMethod->value}"
-       ),
-   };
+   public static function make(string $method): PaymentGatewayInterface
+   {
+       $paymentMethod = PaymentMethodEnum::tryFrom($method);
+
+       return match ($paymentMethod) {
+           PaymentMethodEnum::CREDIT_CARD => new CreditCardPayment(),
+           PaymentMethodEnum::PAYPAL      => new PayPalPayment(),
+           PaymentMethodEnum::APPLE_PAY   => new ApplePayPayment(),
+           default => throw new InvalidArgumentException(
+               "Payment method [{$method}] is not supported."
+           ),
+       };
+   }
    ```
 
 That's all. No changes are needed in `PaymentService` or `PaymentController`.
@@ -248,7 +248,11 @@ That's all. No changes are needed in `PaymentService` or `PaymentController`.
 
 ## 📬 API Documentation (Postman)
 
-The Postman collection is located in the `docs/` folder. Import it into Postman via **Import → File**. It includes requests grouped by module (Authentication, Orders, Payments) with success and error examples.
+The Postman collection is located at `docs/order-payment-api.postman_collection.json`. Import it into Postman via **Import → File**.
+
+It is organized into four folders (Authentication, Orders, Payments, Logout) and includes saved success and error responses for each request.
+
+The collection uses these variables: `base_url`, `token`, `email`, `password`, `order_id`, and `order_to_delete_id`. Set `base_url` to your local server (e.g., `http://127.0.0.1:8000`), then run **Register** or **Login** first and copy the returned token into the `token` variable.
 
 ---
 
@@ -258,7 +262,9 @@ The Postman collection is located in the `docs/` folder. Import it into Postman 
 php artisan test
 ```
 
-The test suite covers both Feature tests (endpoints, authorization, business rules) and Unit tests (payment gateway logic).
+**Feature tests** cover authentication, order creation / listing / deletion, order ownership (IDOR protection), payment processing, the confirmed-order rule, duplicate-payment prevention, and the rule that orders with payments cannot be deleted.
+
+**Unit tests** cover the payment gateway factory (resolving each gateway and rejecting unsupported methods).
 
 ---
 

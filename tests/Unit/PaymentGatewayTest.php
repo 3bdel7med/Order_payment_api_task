@@ -2,7 +2,7 @@
 
 use App\Core\Payment\Factories\PaymentGatewayFactory;
 use App\Core\Payment\Strategies\CreditCardPayment;
-use App\Core\Payment\Strategies\PaypalPayment;
+use App\Core\Payment\Strategies\PayPalPayment;
 use InvalidArgumentException;
 
 test('it resolves credit card payment gateway successfully', function () {
@@ -14,7 +14,7 @@ test('it resolves credit card payment gateway successfully', function () {
 test('it resolves paypal payment gateway successfully', function () {
     $gateway = PaymentGatewayFactory::make('paypal');
 
-    expect($gateway)->toBeInstanceOf(PaypalPayment::class);
+    expect($gateway)->toBeInstanceOf(PayPalPayment::class);
 });
 
 test('it throws an exception for unsupported payment gateway', function () {

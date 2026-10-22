@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatusEnum;
+use App\Enums\PaymentMethodEnum;
+use App\Enums\PaymentStatusEnum;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,6 +28,30 @@ class OrderWriteAuthorizationTest extends TestCase
             'id'     => $order->id,
             'status' => OrderStatusEnum::PENDING->value,
         ]);
+    }
+    public function test_cannot_delete_order_that_has_payments(): void
+    {
+        $user = User::factory()->create();
+
+        $order = Order::create([
+            'user_id'      => $user->id,
+            'status'       => OrderStatusEnum::CONFIRMED,
+            'total_amount' => 100,
+        ]);
+
+        Payment::create([
+            'order_id'       => $order->id,
+            'payment_id'     => 'CC-TEST123',
+            'amount'         => 100,
+            'status'         => PaymentStatusEnum::SUCCESSFUL,
+            'payment_method' => PaymentMethodEnum::CREDIT_CARD,
+        ]);
+
+        $this->actingAs($user, 'api')
+            ->deleteJson("/api/orders/{$order->id}")
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id]);
     }
 
     public function test_intruder_cannot_delete_order(): void
