@@ -6,9 +6,10 @@ use App\Http\Requests\Payment\ProcessPaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Order;
 use App\Services\PaymentService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Exception;
+use Illuminate\Support\Facades\Gate;
 
 class PaymentController extends Controller
 {
@@ -32,9 +33,11 @@ class PaymentController extends Controller
 
     public function process(ProcessPaymentRequest $request): JsonResponse
     {
-        try {
-            $order = Order::findOrFail($request->validated('order_id'));
+        $order = Order::findOrFail($request->validated('order_id'));
 
+        Gate::authorize('pay', $order);
+
+        try {
             $payment = $this->paymentService->processPayment(
                 $order,
                 $request->validated('payment_method')

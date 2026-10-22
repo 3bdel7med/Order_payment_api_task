@@ -10,9 +10,22 @@ A professional, production-ready RESTful API built with Laravel 11, following **
 - **Database:** MySQL / PostgreSQL with explicit FK constraints & indexes
 - **Security:** Throttle Middleware, Global Exception Handler (JSON standardized responses)
 - **Testing:** PHPUnit / Pest PHP Feature & Unit Tests
+- *** 🔒 Security & Authorization (IDOR Protection)***
+- **Order Ownership Protection:** The API implements strict policies (`OrderPolicy`) to ensure that users can **only** view, update, or delete their own orders. Attempting to access or modify another user's order ID will instantly trigger a `403 Forbidden` response, mitigating **Insecure Direct Object Reference (IDOR)** vulnerabilities.
 
 ---
+---
 
+## 🚀 Continuous Integration (CI/CD Pipeline)
+
+This project features a fully automated **GitHub Actions CI/CD pipeline** configured in `.github/workflows/run-tests.yml`. 
+Every time code is pushed or a pull request is opened against the `main` branch, GitHub Actions automatically:
+1. Provisions a clean **Ubuntu** environment with **PHP 8.2** and required extensions.
+2. Spins up an isolated **MySQL 8.0** service container.
+3. Installs composer dependencies and generates application keys.
+4. Runs database migrations and executes the complete **Pest / PHPUnit** test suite to guarantee 100% code health and prevent regressions.
+
+*You can check the passing workflow status badge directly in the repository actions tab!*
 ## 📂 Project Architecture
 The project is structured to maintain strict separation of concerns and open-closed extensibility:
 

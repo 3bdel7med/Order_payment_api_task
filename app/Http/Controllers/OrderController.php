@@ -58,27 +58,28 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order): JsonResponse
     {
-        $updatedOrder = $this->orderService->updateOrder($order, $request->validated());
         Gate::authorize('update', $order);
+        $updatedOrder = $this->orderService->updateOrder($order, $request->validated());
         return response()->json([
             'message' => 'Order updated successfully',
             'data'    => new OrderResource($updatedOrder),
         ]);
     }
 
-    public function destroy(Order $order): JsonResponse
-    {
-        try {
-            Gate::authorize('delete', $order);
-            $this->orderService->deleteOrder($order);
+   public function destroy(Order $order): JsonResponse
+{
+    Gate::authorize('delete', $order);
 
-            return response()->json([
-                'message' => 'Order deleted successfully',
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 400);
-        }
+    try {
+        $this->orderService->deleteOrder($order);
+
+        return response()->json([
+            'message' => 'Order deleted successfully',
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage(),
+        ], $e->getCode() ?: 400);
     }
+}
 }

@@ -28,7 +28,6 @@ class PaymentTest extends TestCase
             'order_id'       => $order->id,
             'payment_method' => PaymentMethodEnum::CREDIT_CARD->value,
         ]);
-        $response->dump();
 
         $response->assertStatus(201)
             ->assertJsonStructure([

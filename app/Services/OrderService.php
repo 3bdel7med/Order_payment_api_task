@@ -34,6 +34,7 @@ class OrderService
     public function getOrders(?OrderStatusEnum $status = null, int $perPage = 15): LengthAwarePaginator
     {
         return Order::with(['items', 'payment'])
+             ->where('user_id', auth()->id())
             ->when($status, fn($query) => $query->status($status))
             ->latest()
             ->paginate($perPage);

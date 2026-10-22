@@ -49,6 +49,9 @@ class PaymentService
     public function getPayments(?int $orderId = null, int $perPage = 15)
     {
         return Payment::with('order')
+            ->whereHas('order', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
             ->when($orderId, fn($query) => $query->where('order_id', $orderId))
             ->latest()
             ->paginate($perPage);
